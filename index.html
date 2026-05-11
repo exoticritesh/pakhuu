@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PakhiOS v1.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=JetBrains+Mono:wght@300;400;700&display=swap');
+
+:root {
+  --bg: #020408;
+  --purple: #7c3aed;
+  --purple-light: #a855f7;
+  --neon-blue: #00d4ff;
+  --neon-pink: #ff007f;
+  --neon-green: #00ff88;
+  --glass: rgba(124,58,237,0.08);
+  --glass-border: rgba(168,85,247,0.25);
+  --text: #e2d9f3;
+  --dim: #6b7280;
+  --glow-purple: 0 0 20px rgba(168,85,247,0.4), 0 0 40px rgba(168,85,247,0.2);
+  --glow-blue: 0 0 20px rgba(0,212,255,0.4), 0 0 40px rgba(0,212,255,0.2);
+  --glow-green: 0 0 20px rgba(0,255,136,0.4);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  cursor: none;
+  user-select: none;
+}
+
+/* CUSTOM CURSOR */
+#cursor {
+  position: fixed;
+  width: 20px; height: 20px;
+  border: 2px solid var(--neon-blue);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%,-50%);
+  transition: width 0.2s, height 0.2s, border-color 0.2s;
+  box-shadow: var(--glow-blue);
+}
+#cursor-dot {
+  position: fixed;
+  width: 4px; height: 4px;
+  background: var(--neon-blue);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%,-50%);
+}
+#cursor.clicking { width: 30px; height: 30px; border-color: var(--purple-light); }
+
+/* PARTICLES */
+#particles { position: fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+
+/* BOOT SCREEN */
+#boot {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
+}
+.boot-logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(2rem,6vw,5rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--purple-light), var(--neon-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 2rem;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+@keyframes pulse-glow {
+  0%,100% { filter: drop-shadow(0 0 20px rgba(168,85,247,0.8)); }
+  50% { filter: drop-shadow(0 0 40px rgba(0,212,255,0.8)); }
+}
+.boot-lines { width: min(500px, 90vw); }
+.boot-line {
+  color: var(--neon-green);
+  font-size: 0.85rem;
+  margin: 0.3rem 0;
+  opacity: 0;
+  animation: fade-in 0.4s forwards;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.boot-line::before { content: '›'; color: var(--purple-light); }
+@keyframes fade-in { to { opacity: 1; } }
+.boot-progress {
+  margin-top: 2rem;
+  width: min(400px, 80vw);
+  height: 2px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.boot-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--purple), var(--neon-blue));
+  border-radius: 2px;
+  transition: width 0.5s ease;
+  box-shadow: var(--glow-blue);
+}
+.boot-version {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  font-size: 0.7rem;
+  color: var(--dim);
+}
+
+/* DESKTOP */
+#desktop {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: none;
+}
+/* Animated grid background */
+.desktop-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(124,58,237,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,58,237,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: grid-drift 20s linear infinite;
+}
+@keyframes grid-drift {
+  0% { background-position: 0 0; }
+  100% { background-position: 60px 60px; }
+}
+.desktop-glow {
+  position: absolute;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%);
+  top: -200px; left: -200px;
+  animation: glow-drift 8s ease-in-out infinite;
+}
+.desktop-glow2 {
+  position: absolute;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,212,255,0.1) 0%, transparent 70%);
+  bottom: -100px; right: -100px;
+  animation: glow-drift 12s ease-in-out infinite reverse;
+}
+@keyframes glow-drift {
+  0%,100% { transform: translate(0,0); }
+  50% { transform: translate(80px,40px); }
+}
+
+/* TOP BAR */
+#topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 36px;
+  background: rgba(2,4,8,0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  justify-content: space-between;
+  z-index: 100;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; color: var(--purple-light); font-weight: 700; }
+.topbar-logo { font-size: 0.85rem; letter-spacing: 2px; }
+.topbar-right { display: flex; align-items: center; gap: 1rem; color: var(--text); }
+.topbar-right span { font-size: 0.7rem; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon-green); display: inline-block; animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* DESKTOP ICONS */
+#icon-grid {
+  position: absolute;
+  top: 50px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+.desk-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 80px;
+  text-align: center;
+}
+.desk-icon:hover {
+  background: rgba(124,58,237,0.2);
+  transform: scale(1.05);
+  box-shadow: var(--glow-purple);
+}
+.desk-icon:active { transform: scale(0.95); }
+.icon-img {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+.icon-img::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+}
+.icon-label {
+  font-size: 0.6rem;
+  color: #fff;
+  text-shadow: 0 0 8px rgba(168,85,247,0.8), 0 1px 3px rgba(0,0,0,0.8);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* DOCK */
+#dock {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(2,4,8,0.6);
+  backdrop-filter: blur(30px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05), var(--glow-purple);
+  z-index: 100;
+}
+.dock-icon {
+  width: 50px; height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
+}
+.dock-icon:hover {
+  transform: scale(1.3) translateY(-8px);
+  background: rgba(124,58,237,0.3);
+  box-shadow: var(--glow-purple);
+  z-index: 1;
+}
+.dock-icon .dock-tip {
+  position: absolute;
+  bottom: 120%;
+  white-space: nowrap;
+  background: rgba(2,4,8,0.9);
+  border: 1px solid var(--glass-border);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--text);
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.dock-icon:hover .dock-tip { opacity: 1; }
+.dock-dot {
+  position: absolute;
+  bottom: -6px;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--neon-blue);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* WINDOWS */
+.os-window {
+  position: absolute;
+  min-width: 320px;
+  min-height: 200px;
+  background: rgba(2,4,8,0.85);
+  backdrop-filter: blur(30px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.03), var(--glow-purple);
+  z-index: 50;
+  display: none;
+  overflow: hidden;
+  animation: window-open 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  resize: both;
+}
+@keyframes window-open {
+  from { opacity: 0; transform: scale(0.85) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.os-window.active { z-index: 60; }
+.window-titlebar {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(124,58,237,0.1);
+  border-bottom: 1px solid var(--glass-border);
+  cursor: grab;
+  gap: 8px;
+}
+.window-titlebar:active { cursor: grabbing; }
+.win-btn {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.win-btn:hover { transform: scale(1.2); }
+.win-close { background: #ff5f57; }
+.win-min { background: #febc2e; }
+.win-max { background: #28c840; }
+.win-title {
+  flex: 1;
+  text-align: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  color: var(--purple-light);
+  letter-spacing: 2px;
+}
+.win-body {
+  padding: 16px;
+  overflow-y: auto;
+  max-height: calc(100% - 48px);
+  scrollbar-width: thin;
+  scrollbar-color: var(--purple) transparent;
+}
+
+/* NOTIFICATION */
+.notif {
+  position: fixed;
+  top: 50px;
+  right: 20px;
+  background: rgba(2,4,8,0.9);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  z-index: 999;
+  max-width: 280px;
+  animation: notif-in 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: var(--glow-purple);
+}
+@keyframes notif-in {
+  from { opacity: 0; transform: translateX(100px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.notif-title { font-family: 'Orbitron', sans-serif; font-size: 0.65rem; color: var(--purple-light); margin-bottom: 4px; }
+.notif-body { font-size: 0.8rem; color: var(--text); }
+
+/* MEMORIES APP */
+.timeline { position: relative; padding-left: 24px; }
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px; top: 0; bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--purple), var(--neon-blue), transparent);
+}
+.t-item {
+  position: relative;
+  margin-bottom: 20px;
+  animation: slide-right 0.5s forwards;
+  opacity: 0;
+}
+.t-item::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 8px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--purple-light);
+  box-shadow: var(--glow-purple);
+}
+@keyframes slide-right {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.t-card {
+  background: rgba(124,58,237,0.08);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition: all 0.3s;
+}
+.t-card:hover { border-color: var(--purple-light); box-shadow: var(--glow-purple); transform: translateX(4px); }
+.t-year { font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: var(--neon-blue); margin-bottom: 2px; }
+.t-text { font-size: 0.9rem; color: var(--text); line-height: 1.4; }
+
+/* FANS APP */
+.fan-messages { display: flex; flex-direction: column; gap: 10px; }
+.fan-msg {
+  background: rgba(0,212,255,0.05);
+  border: 1px solid rgba(0,212,255,0.15);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  animation: fan-float 4s ease-in-out infinite;
+  transition: all 0.3s;
+}
+.fan-msg:hover { transform: scale(1.02); border-color: var(--neon-blue); box-shadow: var(--glow-blue); }
+@keyframes fan-float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.fan-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--purple), var(--neon-blue));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.fan-name { font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: var(--purple-light); }
+.fan-text { font-size: 0.85rem; color: var(--text); margin-top: 2px; }
+.fan-time { font-size: 0.6rem; color: var(--dim); margin-top: 4px; }
+
+/* ACHIEVEMENTS TERMINAL */
+.ach-terminal {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--neon-green);
+  line-height: 2;
+}
+.ach-line { opacity: 0; animation: type-in 0.3s forwards; }
+.ach-line.done { opacity: 1; }
+@keyframes type-in {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.ach-label { color: var(--neon-blue); }
+.ach-check { color: var(--neon-green); }
+
+/* FUTURE GOALS */
+.goals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media(max-width:500px) { .goals-grid { grid-template-columns: 1fr; } }
+.goal-card {
+  background: rgba(124,58,237,0.06);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+  cursor: default;
+}
+.goal-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(124,58,237,0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.goal-card:hover { transform: translateY(-4px); border-color: var(--purple-light); box-shadow: var(--glow-purple); }
+.goal-card:hover::before { opacity: 1; }
+.goal-icon { font-size: 1.5rem; margin-bottom: 8px; }
+.goal-title { font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: var(--neon-blue); margin-bottom: 4px; }
+.goal-text { font-size: 0.8rem; color: var(--text); }
+.goal-glow {
+  position: absolute;
+  top: -20px; right: -20px;
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: rgba(168,85,247,0.2);
+  filter: blur(15px);
+}
+
+/* ROBOT CORE */
+.robot-dash {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.robot-schematic {
+  grid-column: 1/-1;
+  text-align: center;
+  padding: 20px;
+  position: relative;
+}
+.robot-svg { width: 120px; height: 160px; filter: drop-shadow(0 0 20px rgba(168,85,247,0.6)); }
+.pulse-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,212,255,0.3);
+  transform: translate(-50%,-50%);
+  animation: pulse-ring 2s ease-out infinite;
+}
+.pulse-ring:nth-child(2) { animation-delay: 0.7s; }
+.pulse-ring:nth-child(3) { animation-delay: 1.4s; }
+@keyframes pulse-ring {
+  0% { transform: translate(-50%,-50%) scale(0.5); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(1.5); opacity: 0; }
+}
+.status-panel {
+  background: rgba(0,212,255,0.05);
+  border: 1px solid rgba(0,212,255,0.15);
+  border-radius: 10px;
+  padding: 12px;
+}
+.status-title { font-family: 'Orbitron', sans-serif; font-size: 0.55rem; color: var(--neon-blue); margin-bottom: 8px; letter-spacing: 1px; }
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 6px 0;
+  font-size: 0.75rem;
+}
+.status-val {
+  font-family: 'Share Tech Mono', monospace;
+  color: var(--neon-green);
+  font-size: 0.7rem;
+}
+.status-bar-wrap { flex: 1; margin: 0 8px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+.status-bar { height: 100%; border-radius: 2px; animation: status-fill 2s ease-out; }
+@keyframes status-fill { from { width: 0; } }
+
+/* ABOUT */
+.about-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+.about-avatar {
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--purple), var(--neon-blue));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  box-shadow: 0 0 30px rgba(124,58,237,0.6), 0 0 60px rgba(0,212,255,0.3);
+  animation: avatar-glow 3s ease-in-out infinite;
+  overflow: hidden;
+  padding: 3px;
+}
+.about-avatar img { border-radius: 50%; width: 100%; height: 100%; object-fit: cover; display: block; }
+.topbar-photo { width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid var(--purple-light);box-shadow:0 0 8px rgba(168,85,247,0.6);vertical-align:middle; }
+.boot-photo { width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--purple-light);box-shadow:0 0 20px rgba(168,85,247,0.8),0 0 40px rgba(0,212,255,0.4);margin-bottom:1rem;animation:pulse-glow 2s ease-in-out infinite; }
+.icon-photo { width:100%;height:100%;border-radius:14px;object-fit:cover; }
+.fans-header-photo { width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid var(--purple-light);box-shadow:0 0 15px rgba(168,85,247,0.6); }
+@keyframes avatar-glow {
+  0%,100% { box-shadow: 0 0 30px rgba(124,58,237,0.6), 0 0 60px rgba(0,212,255,0.3); }
+  50% { box-shadow: 0 0 50px rgba(124,58,237,0.9), 0 0 80px rgba(0,212,255,0.5); }
+}
+.about-name { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; color: var(--purple-light); }
+.about-title { font-size: 0.85rem; color: var(--neon-blue); }
+.about-bio { font-size: 0.85rem; color: var(--text); line-height: 1.7; text-align: left; }
+.about-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.tag {
+  background: rgba(124,58,237,0.15);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.7rem;
+  color: var(--purple-light);
+  transition: all 0.2s;
+}
+.tag:hover { background: rgba(124,58,237,0.3); box-shadow: var(--glow-purple); }
+
+/* BROWSER */
+.fake-browser { display: flex; flex-direction: column; height: 100%; }
+.browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(0,0,0,0.3);
+  border-bottom: 1px solid var(--glass-border);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+.browser-url {
+  flex: 1;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--neon-blue);
+}
+.link-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.link-card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.link-card:hover { border-color: var(--purple-light); box-shadow: var(--glow-purple); transform: translateY(-4px); }
+.link-card .link-icon { font-size: 2rem; }
+.link-card .link-name { font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: var(--purple-light); }
+.link-card .link-url { font-size: 0.7rem; color: var(--dim); }
+
+/* TERMINAL */
+.terminal-wrap {
+  background: #000;
+  border-radius: 8px;
+  padding: 12px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.term-output { color: var(--neon-green); margin: 4px 0; line-height: 1.6; }
+.term-output.dim { color: var(--dim); }
+.term-output.blue { color: var(--neon-blue); }
+.term-output.purple { color: var(--purple-light); }
+.term-output.err { color: #ff5f57; }
+.term-input-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.term-prompt { color: var(--purple-light); }
+#term-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--neon-green);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+  caret-color: var(--neon-green);
+}
+
+/* SECTION HEADERS */
+.sec-header {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  color: var(--purple-light);
+  letter-spacing: 3px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sec-header::before { content: '//'; color: var(--neon-blue); }
+
+/* AI ASSISTANT WIDGET */
+#ai-widget {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--purple), var(--neon-blue));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  cursor: pointer;
+  box-shadow: var(--glow-purple);
+  z-index: 90;
+  animation: ai-pulse 3s ease-in-out infinite;
+  transition: transform 0.2s;
+}
+#ai-widget:hover { transform: scale(1.1); }
+@keyframes ai-pulse {
+  0%,100% { box-shadow: 0 0 20px rgba(124,58,237,0.6); }
+  50% { box-shadow: 0 0 40px rgba(0,212,255,0.8); }
+}
+
+/* EASTER EGG DEV MODE */
+#dev-mode-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,255,136,0.05);
+  border: 4px solid var(--neon-green);
+  z-index: 9000;
+  pointer-events: none;
+  animation: dev-flicker 0.1s steps(1) infinite;
+}
+@keyframes dev-flicker {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+#dev-mode-banner {
+  display: none;
+  position: fixed;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,255,136,0.15);
+  border: 1px solid var(--neon-green);
+  border-radius: 8px;
+  padding: 6px 20px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--neon-green);
+  z-index: 9001;
+  pointer-events: none;
+}
+
+/* PARTICLE EXPLOSION */
+.particle {
+  position: fixed;
+  pointer-events: none;
+  border-radius: 50%;
+  z-index: 9999;
+  animation: particle-fly 1s ease-out forwards;
+}
+@keyframes particle-fly {
+  0% { opacity: 1; transform: translate(0,0) scale(1); }
+  100% { opacity: 0; transform: var(--tx, translate(100px,-100px)) scale(0); }
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 2px; }
+
+/* UTIL */
+.flex-center { display:flex; align-items:center; justify-content:center; }
+.gap-2 { gap: 8px; }
+.mt-2 { margin-top: 8px; }
+.text-glow { text-shadow: 0 0 20px currentColor; }
+
+/* MOBILE */
+@media(max-width:768px) {
+  #icon-grid { display:none; }
+  .goals-grid { grid-template-columns:1fr; }
+  .robot-dash { grid-template-columns:1fr; }
+  .gallery-grid { grid-template-columns:repeat(2,1fr); }
+  .link-grid { grid-template-columns:1fr 1fr; }
+  .os-window { min-width:90vw; left:5vw !important; }
+}
+
+.glitch {
+  animation: glitch 0.3s steps(1) 3;
+}
+@keyframes glitch {
+  0% { filter: none; }
+  25% { filter: hue-rotate(90deg) saturate(3); transform: skewX(2deg); }
+  50% { filter: invert(0.1); transform: skewX(-2deg); }
+  75% { filter: hue-rotate(-90deg); transform: skewX(1deg); }
+  100% { filter: none; transform: none; }
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-dot"></div>
+<canvas id="particles"></canvas>
+<div id="dev-mode-overlay"></div>
+<div id="dev-mode-banner">⚡ DEVELOPER MODE ACTIVATED — KONAMI UNLOCKED ⚡</div>
+
+<!-- BOOT SCREEN -->
+<div id="boot">
+  <img src="pakhi.jpg" class="boot-photo" onerror="this.style.display='none'" alt="Pakhi">
+  <div class="boot-logo">PakhiOS</div>
+  <div class="boot-lines" id="boot-lines"></div>
+  <div class="boot-progress"><div class="boot-bar" id="boot-bar"></div></div>
+  <div class="boot-version">v1.0.0 — Build 2025 — Tribute Edition</div>
+</div>
+
+<!-- DESKTOP -->
+<div id="desktop">
+  <div class="desktop-bg"></div>
+  <div class="desktop-glow"></div>
+  <div class="desktop-glow2"></div>
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div class="topbar-left">
+      <img src="pakhi.jpg" class="topbar-photo" onerror="this.style.display='none'" alt="Pakhi">
+      <span class="topbar-logo">⚡ PakhiOS</span>
+      <span style="color:var(--dim);font-size:0.65rem;">Creator Tribute Edition</span>
+    </div>
+    <div class="topbar-right">
+      <span><span class="status-dot"></span> AI ONLINE</span>
+      <span id="clock-display">--:--</span>
+      <span>🔋 98%</span>
+      <span>📡 Connected</span>
+    </div>
+  </div>
+
+  <!-- DESKTOP ICONS -->
+  <div id="icon-grid">
+    <div class="desk-icon" onclick="openApp('memories')">
+      <div class="icon-img" style="background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(0,212,255,0.2))">🕰️</div>
+      <div class="icon-label">Memories.exe</div>
+    </div>
+    <div class="desk-icon" onclick="openApp('fans')">
+      <div class="icon-img" style="background:linear-gradient(135deg,rgba(255,0,127,0.2),rgba(124,58,237,0.2))">💬</div>
+      <div class="icon-label">Fans.txt</div>
+    </div>
+    <div class="desk-icon" onclick="openApp('achievements')">
+      <div class="icon-img" style="background:linear-gradient(135deg,rgba(0,255,136,0.2),rgba(124,58,237,0.2))">📋</div>
+      <div class="icon-label">Achieve.log</div>
+    </div>
+    <div class="desk-icon" onclick="openApp('goals')">
+      <div class="icon-img" style="background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(255,0,127,0.2))">🚀</div>
+      <div class="icon-label">Future.ai</div>
+    </div>
+    <div class="desk-icon" onclick="openApp('robot')">
+      <div class="icon-img" style="background:linear-gradient(135deg,rgba(0,212,255,0.3),rgba(0,255,136,0.1))">🤖</div>
+      <div class="icon-label">RobotCore/</div>
+    </div>
+    <div class="desk-icon" onclick="openApp('about')">
+      <div class="icon-img" style="background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(0,212,255,0.3));padding:0;overflow:hidden;">
+        <img src="pakhi.jpg" class="icon-photo" onerror="this.outerHTML='👤'" alt="Pakhi">
+      </div>
+      <div class="icon-label">About.sys</div>
+    </div>
+    <div class="desk-icon" onclick="openApp('browser')">
+      <div class="icon-img" style="background:linear-gradient(135deg,rgba(255,0,127,0.2),rgba(0,212,255,0.2))">🌐</div>
+      <div class="icon-label">Internet.app</div>
+    </div>
+    <div class="desk-icon" onclick="openApp('terminal')">
+      <div class="icon-img" style="background:linear-gradient(135deg,rgba(0,255,136,0.2),rgba(0,0,0,0.5))">⌨️</div>
+      <div class="icon-label">Terminal</div>
+    </div>
+  </div>
+
+  <!-- AI ASSISTANT WIDGET -->
+  <div id="ai-widget" onclick="showAIMessage()">🤖</div>
+
+  <!-- DOCK -->
+  <div id="dock">
+    <div class="dock-icon" onclick="openApp('memories')">🕰️<div class="dock-tip">Memories</div><div class="dock-dot"></div></div>
+    <div class="dock-icon" onclick="openApp('fans')">💬<div class="dock-tip">Fans</div><div class="dock-dot"></div></div>
+    <div class="dock-icon" onclick="openApp('robot')">🤖<div class="dock-tip">RobotCore</div><div class="dock-dot"></div></div>
+    <div class="dock-icon" onclick="openApp('achievements')">🏆<div class="dock-tip">Achievements</div><div class="dock-dot"></div></div>
+    <div class="dock-icon" onclick="openApp('goals')">🚀<div class="dock-tip">FutureGoals</div><div class="dock-dot"></div></div>
+    <div class="dock-icon" onclick="openApp('terminal')">⌨️<div class="dock-tip">Terminal</div><div class="dock-dot"></div></div>
+    <div class="dock-icon" onclick="openApp('browser')">🌐<div class="dock-tip">Internet</div><div class="dock-dot"></div></div>
+    <div class="dock-icon" onclick="openApp('about')" style="padding:0;overflow:hidden;border-radius:12px;"><img src="pakhi.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" onerror="this.outerHTML='👤'" alt="Pakhi"><div class="dock-tip">About Pakhi</div><div class="dock-dot"></div></div>
+
+  </div>
+
+  <!-- ===== WINDOWS ===== -->
+
+  <!-- MEMORIES -->
+  <div class="os-window" id="win-memories" style="width:480px;height:500px;left:120px;top:60px;">
+    <div class="window-titlebar" onmousedown="startDrag(event,'win-memories')">
+      <button class="win-btn win-close" onclick="closeWin('win-memories')"></button>
+      <button class="win-btn win-min" onclick="minWin('win-memories')"></button>
+      <button class="win-btn win-max" onclick="maxWin('win-memories')"></button>
+      <div class="win-title">MEMORIES.EXE — CREATOR JOURNEY</div>
+    </div>
+    <div class="win-body">
+      <div class="sec-header">Timeline</div>
+      <div class="timeline">
+        <div class="t-item" style="animation-delay:0.1s">
+          <div class="t-card">
+            <div class="t-year">EARLY DAYS</div>
+            <div class="t-text">✨ Started learning to code through WhiteHat Jr — the spark that lit the universe</div>
+          </div>
+        </div>
+        <div class="t-item" style="animation-delay:0.2s">
+          <div class="t-card">
+            <div class="t-year">BUILDING PHASE</div>
+            <div class="t-text">🔨 Built 150+ projects — from simple scripts to complex IoT systems and full-stack apps</div>
+          </div>
+        </div>
+        <div class="t-item" style="animation-delay:0.3s">
+          <div class="t-card">
+            <div class="t-year">TEACHING ERA</div>
+            <div class="t-text">📡 Started teaching coding and IoT to others — because knowledge shared is knowledge multiplied</div>
+          </div>
+        </div>
+        <div class="t-item" style="animation-delay:0.4s">
+          <div class="t-card">
+            <div class="t-year">CONTENT CREATION</div>
+            <div class="t-text">🎬 Launched YouTube channel — making tech accessible, fun, and real for everyone</div>
+          </div>
+        </div>
+        <div class="t-item" style="animation-delay:0.5s">
+          <div class="t-card">
+            <div class="t-year">CODEWITHPAKHI.COM</div>
+            <div class="t-text">🌐 Founded codewithpakhi.com — a platform born from passion, built for the community</div>
+          </div>
+        </div>
+        <div class="t-item" style="animation-delay:0.6s">
+          <div class="t-card">
+            <div class="t-year">ROBOTICS FRONTIER</div>
+            <div class="t-text">🤖 Working on a GPT-integrated robot — AI meets hardware, the future is now</div>
+          </div>
+        </div>
+        <div class="t-item" style="animation-delay:0.7s">
+          <div class="t-card">
+            <div class="t-year">PAKHIS — CO-FOUNDED</div>
+            <div class="t-text">👗 Co-founded Pakhis — a clothing brand with her mother, blending creativity beyond tech</div>
+          </div>
+        </div>
+        <div class="t-item" style="animation-delay:0.8s">
+          <div class="t-card">
+            <div class="t-year">IEEE MEMBERSHIP</div>
+            <div class="t-text">🏅 Joined IEEE — connecting with the global engineering and technology community</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FANS -->
+  <div class="os-window" id="win-fans" style="width:420px;height:460px;left:200px;top:80px;">
+    <div class="window-titlebar" onmousedown="startDrag(event,'win-fans')">
+      <button class="win-btn win-close" onclick="closeWin('win-fans')"></button>
+      <button class="win-btn win-min" onclick="minWin('win-fans')"></button>
+      <button class="win-btn win-max" onclick="maxWin('win-fans')"></button>
+      <div class="win-title">FANS.TXT — FAN APPRECIATION</div>
+    </div>
+    <div class="win-body">
+      <div class="sec-header">Messages from the Universe</div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(124,58,237,0.08);border:1px solid var(--glass-border);border-radius:12px;margin-bottom:14px;">
+        <img src="pakhi.jpg" class="fans-header-photo" onerror="this.outerHTML='<span style=\'font-size:2rem\'>👩‍💻</span>'" alt="Pakhi">
+        <div>
+          <div style="font-family:\'Orbitron\',sans-serif;font-size:0.7rem;color:var(--purple-light);">Pakhi Singh</div>
+          <div style="font-size:0.75rem;color:var(--neon-blue);margin-top:2px;">@codewithpakhi · Tech Creator · Robotics · IoT</div>
+          <div style="font-size:0.7rem;color:var(--dim);margin-top:2px;">150+ projects · Founder · IEEE Member</div>
+        </div>
+      </div>
+      <div class="fan-messages">
+        <div class="fan-msg" style="animation-delay:0s">
+          <div class="fan-avatar">🌟</div>
+          <div>
+            <div class="fan-name">@techkid_aryan</div>
+            <div class="fan-text">"You inspired me to start coding at 14. I built my first website because of you. Thank you, Pakhi."</div>
+            <div class="fan-time">2 hours ago</div>
+          </div>
+        </div>
+        <div class="fan-msg" style="animation-delay:0.5s">
+          <div class="fan-avatar">🔥</div>
+          <div>
+            <div class="fan-name">@iot_enthusiast_dev</div>
+            <div class="fan-text">"Your IoT projects are absolutely insane! The smart home automation tutorial changed everything for me."</div>
+            <div class="fan-time">5 hours ago</div>
+          </div>
+        </div>
+        <div class="fan-msg" style="animation-delay:1s">
+          <div class="fan-avatar">💜</div>
+          <div>
+            <div class="fan-name">@coder_priya22</div>
+            <div class="fan-text">"Future tech queen, no doubt. Watching your journey from day 1 and I'm so proud of you!"</div>
+            <div class="fan-time">8 hours ago</div>
+          </div>
+        </div>
+        <div class="fan-msg" style="animation-delay:1.5s">
+          <div class="fan-avatar">⚡</div>
+          <div>
+            <div class="fan-name">@robotics_raj</div>
+            <div class="fan-text">"Your consistency motivates everyone around you. Every project, every video — pure dedication."</div>
+            <div class="fan-time">12 hours ago</div>
+          </div>
+        </div>
+        <div class="fan-msg" style="animation-delay:2s">
+          <div class="fan-avatar">🚀</div>
+          <div>
+            <div class="fan-name">@maker_meera</div>
+            <div class="fan-text">"The way you explain complex tech so simply is a gift. You make robotics feel like poetry."</div>
+            <div class="fan-time">1 day ago</div>
+          </div>
+        </div>
+        <div class="fan-msg" style="animation-delay:2.5s">
+          <div class="fan-avatar">🌙</div>
+          <div>
+            <div class="fan-name">@devgirl_neha</div>
+            <div class="fan-text">"I joined IEEE because of your influence. You prove every day that girls own tech spaces."</div>
+            <div class="fan-time">2 days ago</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACHIEVEMENTS -->
+  <div class="os-window" id="win-achievements" style="width:500px;height:480px;left:160px;top:70px;">
+    <div class="window-titlebar" onmousedown="startDrag(event,'win-achievements')">
+      <button class="win-btn win-close" onclick="closeWin('win-achievements')"></button>
+      <button class="win-btn win-min" onclick="minWin('win-achievements')"></button>
+      <button class="win-btn win-max" onclick="maxWin('win-achievements')"></button>
+      <div class="win-title">ACHIEVEMENTS.LOG — TERMINAL OUTPUT</div>
+    </div>
+    <div class="win-body">
+      <div class="ach-terminal" id="ach-terminal">
+        <div style="color:var(--purple-light);margin-bottom:12px">$ pakhi --list-achievements --verbose</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FUTURE GOALS -->
+  <div class="os-window" id="win-goals" style="width:500px;height:480px;left:180px;top:70px;">
+    <div class="window-titlebar" onmousedown="startDrag(event,'win-goals')">
+      <button class="win-btn win-close" onclick="closeWin('win-goals')"></button>
+      <button class="win-btn win-min" onclick="minWin('win-goals')"></button>
+      <button class="win-btn win-max" onclick="maxWin('win-goals')"></button>
+      <div class="win-title">FUTURE_GOALS.AI — HOLOGRAPHIC PROJECTIONS</div>
+    </div>
+    <div class="win-body">
+      <div class="sec-header">Projections for Tomorrow</div>
+      <div class="goals-grid">
+        <div class="goal-card">
+          <div class="goal-glow"></div>
+          <div class="goal-icon">🦾</div>
+          <div class="goal-title">HUMANOID ROBOTICS</div>
+          <div class="goal-text">Building intelligent humanoid robots with AI-driven decision making and emotional response systems</div>
+        </div>
+        <div class="goal-card">
+          <div class="goal-glow"></div>
+          <div class="goal-icon">🏫</div>
+          <div class="goal-title">TECH EDUCATION PLATFORM</div>
+          <div class="goal-text">Creating a massive global tech education platform — free, inclusive, transformative</div>
+        </div>
+        <div class="goal-card">
+          <div class="goal-glow"></div>
+          <div class="goal-icon">🚀</div>
+          <div class="goal-title">TECH STARTUP LAUNCH</div>
+          <div class="goal-text">Launching an innovative tech startup that disrupts the way humans interact with machines</div>
+        </div>
+        <div class="goal-card">
+          <div class="goal-glow"></div>
+          <div class="goal-icon">🌍</div>
+          <div class="goal-title">INSPIRE MILLIONS</div>
+          <div class="goal-text">Reaching millions through content — making every young creator believe they can build the future</div>
+        </div>
+        <div class="goal-card">
+          <div class="goal-glow"></div>
+          <div class="goal-icon">🧠</div>
+          <div class="goal-title">AI-POWERED SYSTEMS</div>
+          <div class="goal-text">Building production-grade AI systems that solve real-world problems at scale</div>
+        </div>
+        <div class="goal-card">
+          <div class="goal-glow"></div>
+          <div class="goal-icon">👗</div>
+          <div class="goal-title">PAKHIS GLOBAL</div>
+          <div class="goal-text">Expanding Pakhis into a globally recognized fashion brand that merges tech culture with style</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROBOT CORE -->
+  <div class="os-window" id="win-robot" style="width:520px;height:520px;left:140px;top:60px;">
+    <div class="window-titlebar" onmousedown="startDrag(event,'win-robot')">
+      <button class="win-btn win-close" onclick="closeWin('win-robot')"></button>
+      <button class="win-btn win-min" onclick="minWin('win-robot')"></button>
+      <button class="win-btn win-max" onclick="maxWin('win-robot')"></button>
+      <div class="win-title">ROBOT_CORE/ — SYSTEM DASHBOARD</div>
+    </div>
+    <div class="win-body">
+      <div class="sec-header">Core Systems Status</div>
+      <div class="robot-dash">
+        <div class="robot-schematic">
+          <div class="pulse-ring"></div>
+          <div class="pulse-ring"></div>
+          <div class="pulse-ring"></div>
+          <svg class="robot-svg" viewBox="0 0 120 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Head -->
+            <rect x="35" y="10" width="50" height="40" rx="8" fill="rgba(124,58,237,0.3)" stroke="#a855f7" stroke-width="1.5"/>
+            <!-- Eyes -->
+            <circle cx="50" cy="30" r="6" fill="#00d4ff" opacity="0.9"><animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite"/></circle>
+            <circle cx="70" cy="30" r="6" fill="#00d4ff" opacity="0.9"><animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" begin="1s" repeatCount="indefinite"/></circle>
+            <circle cx="50" cy="30" r="3" fill="white"/>
+            <circle cx="70" cy="30" r="3" fill="white"/>
+            <!-- Antenna -->
+            <line x1="60" y1="10" x2="60" y2="2" stroke="#a855f7" stroke-width="1.5"/>
+            <circle cx="60" cy="2" r="2" fill="#a855f7"><animate attributeName="r" values="2;4;2" dur="1.5s" repeatCount="indefinite"/></circle>
+            <!-- Mouth -->
+            <rect x="45" y="42" width="30" height="4" rx="2" fill="rgba(0,212,255,0.5)">
+              <animate attributeName="width" values="30;20;30" dur="3s" repeatCount="indefinite"/>
+              <animate attributeName="x" values="45;50;45" dur="3s" repeatCount="indefinite"/>
+            </rect>
+            <!-- Neck -->
+            <rect x="53" y="50" width="14" height="8" fill="rgba(124,58,237,0.4)" stroke="#7c3aed" stroke-width="1"/>
+            <!-- Body -->
+            <rect x="25" y="58" width="70" height="60" rx="8" fill="rgba(124,58,237,0.2)" stroke="#a855f7" stroke-width="1.5"/>
+            <!-- Chest panel -->
+            <rect x="40" y="70" width="40" height="30" rx="4" fill="rgba(0,212,255,0.1)" stroke="#00d4ff" stroke-width="1"/>
+            <circle cx="60" cy="80" r="8" fill="rgba(124,58,237,0.4)" stroke="#a855f7"><animate attributeName="r" values="8;10;8" dur="2s" repeatCount="indefinite"/></circle>
+            <circle cx="60" cy="80" r="4" fill="#a855f7"/>
+            <!-- Left arm -->
+            <rect x="5" y="60" width="18" height="50" rx="6" fill="rgba(124,58,237,0.25)" stroke="#7c3aed" stroke-width="1.5">
+              <animateTransform attributeName="transform" type="rotate" values="0 14 85;5 14 85;0 14 85;-5 14 85;0 14 85" dur="4s" repeatCount="indefinite"/>
+            </rect>
+            <!-- Right arm -->
+            <rect x="97" y="60" width="18" height="50" rx="6" fill="rgba(124,58,237,0.25)" stroke="#7c3aed" stroke-width="1.5">
+              <animateTransform attributeName="transform" type="rotate" values="0 106 85;-5 106 85;0 106 85;5 106 85;0 106 85" dur="4s" repeatCount="indefinite"/>
+            </rect>
+            <!-- Legs -->
+            <rect x="35" y="120" width="20" height="35" rx="6" fill="rgba(124,58,237,0.25)" stroke="#7c3aed" stroke-width="1.5"/>
+            <rect x="65" y="120" width="20" height="35" rx="6" fill="rgba(124,58,237,0.25)" stroke="#7c3aed" stroke-width="1.5"/>
+            <!-- Data lines -->
+            <line x1="40" y1="75" x2="35" y2="75" stroke="#00ff88" stroke-width="0.5" opacity="0.6"><animate attributeName="opacity" values="0.6;0;0.6" dur="1s" repeatCount="indefinite"/></line>
+            <line x1="80" y1="75" x2="85" y2="75" stroke="#00ff88" stroke-width="0.5" opacity="0.6"><animate attributeName="opacity" values="0;0.6;0" dur="1s" repeatCount="indefinite"/></line>
+          </svg>
+        </div>
+        <div class="status-panel">
+          <div class="status-title">NEURAL SYSTEMS</div>
+          <div class="status-row">
+            <span>GPT Integration</span>
+            <div class="status-bar-wrap"><div class="status-bar" style="width:94%;background:linear-gradient(90deg,var(--purple),var(--neon-blue))"></div></div>
+            <span class="status-val">ONLINE</span>
+          </div>
+          <div class="status-row">
+            <span>Voice Module</span>
+            <div class="status-bar-wrap"><div class="status-bar" style="width:88%;background:linear-gradient(90deg,var(--purple),var(--neon-green))"></div></div>
+            <span class="status-val">ACTIVE</span>
+          </div>
+          <div class="status-row">
+            <span>Vision Core</span>
+            <div class="status-bar-wrap"><div class="status-bar" style="width:76%;background:linear-gradient(90deg,var(--neon-blue),var(--purple))"></div></div>
+            <span class="status-val">76%</span>
+          </div>
+          <div class="status-row">
+            <span>AI Reasoning</span>
+            <div class="status-bar-wrap"><div class="status-bar" style="width:99%;background:linear-gradient(90deg,var(--neon-green),var(--neon-blue))"></div></div>
+            <span class="status-val">MAX</span>
+          </div>
+        </div>
+        <div class="status-panel">
+          <div class="status-title">MOVEMENT SYSTEMS</div>
+          <div class="status-row">
+            <span>Motor Control</span>
+            <div class="status-bar-wrap"><div class="status-bar" style="width:82%;background:linear-gradient(90deg,var(--purple),var(--neon-pink))"></div></div>
+            <span class="status-val">ACTIVE</span>
+          </div>
+          <div class="status-row">
+            <span>Servo Arrays</span>
+            <div class="status-bar-wrap"><div class="status-bar" style="width:91%;background:linear-gradient(90deg,var(--neon-blue),var(--purple))"></div></div>
+            <span class="status-val">91%</span>
+          </div>
+          <div class="status-row">
+            <span>Balance AI</span>
+            <div class="status-bar-wrap"><div class="status-bar" style="width:88%;background:linear-gradient(90deg,var(--neon-green),var(--purple))"></div></div>
+            <span class="status-val">STBL</span>
+          </div>
+          <div class="status-row">
+            <span>IoT Sensors</span>
+            <div class="status-bar-wrap"><div class="status-bar" style="width:100%;background:linear-gradient(90deg,var(--neon-green),var(--neon-blue))"></div></div>
+            <span class="status-val">FULL</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding:10px;background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.2);border-radius:8px;font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--neon-green)">
+        <span style="color:var(--dim)">sys &gt; </span>RobotCore v2.4 — GPT-integrated autonomous system by Pakhi Singh
+        <span style="display:block;margin-top:4px;color:var(--dim)">sys &gt; </span><span>All systems nominal. Next milestone: Full bipedal locomotion.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="os-window" id="win-about" style="width:420px;height:520px;left:160px;top:60px;">
+    <div class="window-titlebar" onmousedown="startDrag(event,'win-about')">
+      <button class="win-btn win-close" onclick="closeWin('win-about')"></button>
+      <button class="win-btn win-min" onclick="minWin('win-about')"></button>
+      <button class="win-btn win-max" onclick="maxWin('win-about')"></button>
+      <div class="win-title">ABOUT_PAKHI.SYS</div>
+    </div>
+    <div class="win-body">
+      <div class="about-profile">
+        <div class="about-avatar" id="about-avatar">
+          <img src="pakhi.jpg" alt="Pakhi" onerror="this.outerHTML='<span style=\'font-size:3rem\'>👩‍💻</span>'">
+        </div>
+        <div>
+          <div class="about-name">Pakhi Singh</div>
+          <div class="about-title" style="margin-top:4px">also known as Yashika Singh</div>
+        </div>
+        <div class="about-tags">
+          <span class="tag">Full Stack Dev</span>
+          <span class="tag">IoT Builder</span>
+          <span class="tag">Robotics</span>
+          <span class="tag">Tech Creator</span>
+          <span class="tag">Content Creator</span>
+          <span class="tag">IEEE Member</span>
+          <span class="tag">Founder</span>
+          <span class="tag">Co-Founder</span>
+          <span class="tag">Editor</span>
+        </div>
+        <div class="about-bio">
+          Pakhi Singh is a young tech creator, full stack developer, robotics enthusiast, editor, and content creator passionate about coding, AI, IoT, and building futuristic projects.
+          <br><br>
+          She teaches coding and IoT through hands-on projects, builds experimental robotics systems, creates educational content, and constantly pushes the boundaries of what's possible with technology.
+          <br><br>
+          She is the founder of <strong style="color:var(--neon-blue)">codewithpakhi.com</strong> and co-founded <strong style="color:var(--purple-light)">Pakhis</strong> — a clothing brand started with her mother, proving that creativity extends far beyond the screen.
+        </div>
+        <div style="width:100%;padding:12px;background:rgba(124,58,237,0.08);border:1px solid var(--glass-border);border-radius:10px;">
+          <div class="sec-header" style="margin-bottom:10px">Hobbies & Interests</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <span class="tag">♟️ Chess</span>
+            <span class="tag">🤖 Robotics</span>
+            <span class="tag">💻 Coding</span>
+            <span class="tag">🎬 Video Making</span>
+            <span class="tag">✂️ Editing</span>
+            <span class="tag">⚡ Tech Experiments</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BROWSER -->
+  <div class="os-window" id="win-browser" style="width:480px;height:440px;left:170px;top:70px;">
+    <div class="window-titlebar" onmousedown="startDrag(event,'win-browser')">
+      <button class="win-btn win-close" onclick="closeWin('win-browser')"></button>
+      <button class="win-btn win-min" onclick="minWin('win-browser')"></button>
+      <button class="win-btn win-max" onclick="maxWin('win-browser')"></button>
+      <div class="win-title">INTERNET.APP — PAKHI BROWSER v1</div>
+    </div>
+    <div class="win-body">
+      <div class="browser-bar">
+        <span style="font-size:0.9rem">🔒</span>
+        <div class="browser-url" id="browser-url">pakhi://home</div>
+        <span style="font-size:0.9rem;cursor:pointer">↻</span>
+      </div>
+      <div class="sec-header">Pakhi's Digital Universe</div>
+      <div class="link-grid">
+        <a href="https://codewithpakhi.com" target="_blank" class="link-card" onclick="setBrowserUrl('codewithpakhi.com')">
+          <div class="link-icon">🌐</div>
+          <div class="link-name">CODEWITHPAKHI.COM</div>
+          <div class="link-url">her coding platform</div>
+        </a>
+        <a href="https://github.com/thepakhisingh" target="_blank" class="link-card" onclick="setBrowserUrl('github.com/pakhi')">
+          <div class="link-icon">🐙</div>
+          <div class="link-name">GITHUB</div>
+          <div class="link-url">150+ projects</div>
+        </a>
+        <a href="https://youtube.com/YaYashika" target="_blank" class="link-card" onclick="setBrowserUrl('youtube.com/@codewithpakhi')">
+          <div class="link-icon">📺</div>
+          <div class="link-name">YOUTUBE</div>
+          <div class="link-url">tech tutorials & vlogs</div>
+        </a>
+        <a href="https://instagram.com/thepakhisingh" target="_blank" class="link-card" onclick="setBrowserUrl('instagram.com/pakhi')">
+          <div class="link-icon">📸</div>
+          <div class="link-name">INSTAGRAM</div>
+          <div class="link-url">behind the scenes</div>
+
+        <a href="https://pakhis.com" target="_blank" class="link-card" onclick="setBrowserUrl('pakhis.com')">
+          <div class="link-icon">👗</div>
+          <div class="link-name">PAKHIS.COM</div>
+          <div class="link-url">the fashion brand</div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- TERMINAL -->
+  <div class="os-window" id="win-terminal" style="width:500px;height:420px;left:150px;top:80px;">
+    <div class="window-titlebar" onmousedown="startDrag(event,'win-terminal')">
+      <button class="win-btn win-close" onclick="closeWin('win-terminal')"></button>
+      <button class="win-btn win-min" onclick="minWin('win-terminal')"></button>
+      <button class="win-btn win-max" onclick="maxWin('win-terminal')"></button>
+      <div class="win-title">TERMINAL — PAKHIOS SHELL v1</div>
+    </div>
+    <div class="win-body" style="padding:0">
+      <div class="terminal-wrap" id="terminal-output">
+        <div class="term-output blue">PakhiOS Shell v1.0.0 — Type 'help' for commands</div>
+        <div class="term-output dim">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
+        <div class="term-input-line">
+          <span class="term-prompt">pakhi@os:~$</span>
+          <input type="text" id="term-input" placeholder="type a command..." autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end desktop -->
+
+<!-- NOTIFICATION CONTAINER -->
+<div id="notif-container" style="position:fixed;top:50px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px;"></div>
+
+<script>
+// ===== CURSOR =====
+const cursor = document.getElementById('cursor');
+const cursorDot = document.getElementById('cursor-dot');
+let mx=0,my=0,cx=0,cy=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX; my=e.clientY;
+  cursorDot.style.left=mx+'px';
+  cursorDot.style.top=my+'px';
+});
+document.addEventListener('mousedown',()=>cursor.classList.add('clicking'));
+document.addEventListener('mouseup',()=>cursor.classList.remove('clicking'));
+function animCursor(){
+  cx+=(mx-cx)*0.15; cy+=(my-cy)*0.15;
+  cursor.style.left=cx+'px'; cursor.style.top=cy+'px';
+  requestAnimationFrame(animCursor);
+}
+animCursor();
+
+// ===== PARTICLES CANVAS =====
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
+const stars=[];
+for(let i=0;i<200;i++){
+  stars.push({
+    x:Math.random()*canvas.width,
+    y:Math.random()*canvas.height,
+    r:Math.random()*1.5+0.3,
+    o:Math.random(),
+    s:Math.random()*0.003+0.001,
+    vx:(Math.random()-0.5)*0.1,
+    vy:(Math.random()-0.5)*0.1
+  });
+}
+function drawStars(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  stars.forEach(s=>{
+    s.o+=s.s*(Math.random()>0.5?1:-1);
+    s.o=Math.max(0.1,Math.min(1,s.o));
+    s.x+=s.vx; s.y+=s.vy;
+    if(s.x<0)s.x=canvas.width;
+    if(s.x>canvas.width)s.x=0;
+    if(s.y<0)s.y=canvas.height;
+    if(s.y>canvas.height)s.y=0;
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(168,85,247,${s.o})`;
+    ctx.fill();
+    // occasional blue star
+    if(Math.random()<0.001){
+      ctx.beginPath();
+      ctx.arc(s.x,s.y,s.r*1.5,0,Math.PI*2);
+      ctx.fillStyle=`rgba(0,212,255,${s.o*0.5})`;
+      ctx.fill();
+    }
+  });
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+
+// ===== BOOT SEQUENCE =====
+const bootLines=[
+  'Initializing PakhiOS v1.0...',
+  'Loading robotics modules...',
+  'Mounting creator filesystem...',
+  'Connecting to creator universe...',
+  'Activating IoT subsystems...',
+  'Neural AI core activated...',
+  'Loading memory archives...',
+  'Syncing fan database...',
+  'Starting RobotCore daemon...',
+  'All systems operational.',
+  'Welcome back, Pakhi. 💜'
+];
+const bootContainer = document.getElementById('boot-lines');
+const bootBar = document.getElementById('boot-bar');
+let bootIdx=0;
+function nextBootLine(){
+  if(bootIdx>=bootLines.length){
+    setTimeout(()=>{
+      document.getElementById('boot').style.transition='opacity 1.5s';
+      document.getElementById('boot').style.opacity='0';
+      setTimeout(()=>{
+        document.getElementById('boot').style.display='none';
+        document.getElementById('desktop').style.display='block';
+        setTimeout(()=>{ openApp('about'); showNotif('PakhiOS','Welcome! Double-click any icon to open an app.'); }, 600);
+        startClock();
+      },1500);
+    },600);
+    return;
+  }
+  const div=document.createElement('div');
+  div.className='boot-line';
+  div.textContent=bootLines[bootIdx];
+  div.style.animationDelay='0s';
+  bootContainer.appendChild(div);
+  bootBar.style.width=((bootIdx+1)/bootLines.length*100)+'%';
+  bootIdx++;
+  const delay = bootLines[bootIdx-1].includes('Welcome')?600:300+Math.random()*200;
+  setTimeout(nextBootLine,delay);
+}
+setTimeout(nextBootLine,500);
+
+// ===== CLOCK =====
+function startClock(){
+  function tick(){
+    const now=new Date();
+    document.getElementById('clock-display').textContent=
+      now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});
+  }
+  tick(); setInterval(tick,1000);
+}
+
+// ===== WINDOW MANAGEMENT =====
+const windows={};
+let zTop=60;
+function openApp(name){
+  const winEl=document.getElementById('win-'+name);
+  if(!winEl)return;
+  if(winEl.style.display==='block'){
+    bringToFront(winEl);
+    winEl.classList.add('glitch');
+    setTimeout(()=>winEl.classList.remove('glitch'),300);
+    return;
+  }
+  winEl.style.display='block';
+  bringToFront(winEl);
+  if(name==='achievements') setTimeout(renderAchievements,300);
+}
+function closeWin(id){
+  const w=document.getElementById(id);
+  w.style.transition='opacity 0.2s, transform 0.2s';
+  w.style.opacity='0';
+  w.style.transform='scale(0.9)';
+  setTimeout(()=>{w.style.display='none';w.style.opacity='';w.style.transform='';w.style.transition='';},200);
+}
+function minWin(id){closeWin(id);}
+function maxWin(id){
+  const w=document.getElementById(id);
+  if(w.dataset.maxed==='1'){
+    Object.assign(w.style,{top:w.dataset.ot,left:w.dataset.ol,width:w.dataset.ow,height:w.dataset.oh});
+    w.dataset.maxed='0';
+  }else{
+    w.dataset.ot=w.style.top;w.dataset.ol=w.style.left;
+    w.dataset.ow=w.style.width;w.dataset.oh=w.style.height;
+    Object.assign(w.style,{top:'36px',left:'0',width:'100vw',height:'calc(100vh - 36px - 72px)'});
+    w.dataset.maxed='1';
+  }
+}
+function bringToFront(el){
+  zTop++;
+  el.style.zIndex=zTop;
+  document.querySelectorAll('.os-window').forEach(w=>w.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ===== DRAG =====
+function startDrag(e,id){
+  if(e.button!==0)return;
+  const win=document.getElementById(id);
+  bringToFront(win);
+  const startX=e.clientX,startY=e.clientY;
+  const startL=parseInt(win.style.left)||100;
+  const startT=parseInt(win.style.top)||80;
+  function onMove(ev){
+    win.style.left=(startL+ev.clientX-startX)+'px';
+    win.style.top=Math.max(36,startT+ev.clientY-startY)+'px';
+  }
+  function onUp(){ document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); }
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
+}
+
+// ===== NOTIFICATIONS =====
+function showNotif(title,body){
+  const cont=document.getElementById('notif-container');
+  const el=document.createElement('div');
+  el.className='notif';
+  el.innerHTML=`<div class="notif-title">⚡ ${title}</div><div class="notif-body">${body}</div>`;
+  cont.appendChild(el);
+  setTimeout(()=>{
+    el.style.transition='opacity 0.4s, transform 0.4s';
+    el.style.opacity='0';
+    el.style.transform='translateX(100px)';
+    setTimeout(()=>el.remove(),400);
+  },4000);
+}
+
+// ===== ACHIEVEMENTS TERMINAL =====
+const achData=[
+  {label:'[ROLE]',val:'Full Stack Developer',icon:'✅'},
+  {label:'[ROLE]',val:'Robotics Enthusiast',icon:'✅'},
+  {label:'[TECH]',val:'IoT Project Builder — 150+ projects',icon:'✅'},
+  {label:'[ORG]',val:'IEEE Member',icon:'✅'},
+  {label:'[CREATE]',val:'Tech Content Creator',icon:'✅'},
+  {label:'[FOUND]',val:'Founder — codewithpakhi.com',icon:'✅'},
+  {label:'[FOUND]',val:'Co-Founder — Pakhis (clothing brand)',icon:'✅'},
+  {label:'[SKILL]',val:'Editing & Video Production',icon:'✅'},
+  {label:'[BUILD]',val:'GPT-Integrated Robot (in progress)',icon:'🔄'},
+  {label:'[TEACH]',val:'Coding & IoT Education Instructor',icon:'✅'},
+  {label:'[PLAY]',val:'Chess Player',icon:'✅'},
+  {label:'[STAT]',val:'150+ Projects Shipped',icon:'🏆'},
+];
+let achRendered=false;
+function renderAchievements(){
+  if(achRendered)return;
+  achRendered=true;
+  const term=document.getElementById('ach-terminal');
+  achData.forEach((a,i)=>{
+    setTimeout(()=>{
+      const div=document.createElement('div');
+      div.className='ach-line';
+      div.innerHTML=`<span class="ach-check">${a.icon}</span> <span class="ach-label">${a.label}</span> ${a.val}`;
+      div.style.animationDelay='0s';
+      term.appendChild(div);
+    },i*180);
+  });
+}
+
+// ===== TERMINAL =====
+const termInput=document.getElementById('term-input');
+const termOut=document.getElementById('terminal-output');
+const cmds={
+  help:()=>`<span style="color:var(--purple-light)">Available commands:</span><br>
+  <span style="color:var(--neon-blue)">about</span> · <span style="color:var(--neon-blue)">inspire</span> · <span style="color:var(--neon-blue)">open-fans</span><br>
+  <span style="color:var(--neon-blue)">open-robot</span> · <span style="color:var(--neon-blue)">open-memories</span> · <span style="color:var(--neon-blue)">open-goals</span><br>
+  <span style="color:var(--neon-blue)">play-memory</span> · <span style="color:var(--neon-blue)">whoami</span> · <span style="color:var(--neon-blue)">version</span> · <span style="color:var(--neon-blue)">clear</span>`,
+  about:()=>'PakhiOS v1.0 — A tribute to a creator building the future. Made with 💜',
+  inspire:()=>{
+    const quotes=['Dream big. Build bigger.','Code is poetry. Robots are art.','The future belongs to those who build it today.','Every project is a step closer to the stars.','Create. Teach. Inspire. Repeat.','Debug your fears. Deploy your dreams.'];
+    return `<span style="color:var(--neon-green)">"${quotes[Math.floor(Math.random()*quotes.length)]}"</span>`;
+  },
+  'open-fans':()=>{openApp('fans');return 'Opening Fans.txt...'},
+  'open-robot':()=>{openApp('robot');return 'Booting RobotCore/...'},
+  'open-memories':()=>{openApp('memories');return 'Loading Memories.exe...'},
+  'open-goals':()=>{openApp('goals');return 'Loading FutureGoals.ai...'},
+  'play-memory':()=>'🕰️ <i>Loading memory: "The day the first project worked at 2am..."</i><br>Error 404: Memory too precious to display.',
+  whoami:()=>'pakhi@os:~ — You are in PakhiOS. A universe built for a creator.',
+  version:()=>'PakhiOS v1.0.0 (Tribute Edition) — kernel: creator-core — uptime: ∞',
+  clear:()=>'__CLEAR__',
+  pakhi:()=>{ triggerParticleExplosion(window.innerWidth/2,window.innerHeight/2); return '✨ <span style="color:var(--neon-pink)">PAKHI MODE ACTIVATED — particle storm!</span>'; }
+};
+termInput.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  const cmd=termInput.value.trim().toLowerCase();
+  if(!cmd){termInput.value='';return;}
+  const promptLine=document.createElement('div');
+  promptLine.className='term-output';
+  promptLine.innerHTML=`<span style="color:var(--purple-light)">pakhi@os:~$</span> ${cmd}`;
+  termOut.insertBefore(promptLine,termOut.lastElementChild);
+  termInput.value='';
+  const fn=cmds[cmd];
+  if(fn){
+    const res=fn();
+    if(res==='__CLEAR__'){
+      const lines=termOut.querySelectorAll('.term-output');
+      lines.forEach(l=>l.remove());
+    } else {
+      const out=document.createElement('div');
+      out.className='term-output';
+      out.innerHTML=res;
+      termOut.insertBefore(out,termOut.lastElementChild);
+    }
+  } else {
+    const out=document.createElement('div');
+    out.className='term-output err';
+    out.textContent=`Command not found: ${cmd}. Type 'help'.`;
+    termOut.insertBefore(out,termOut.lastElementChild);
+  }
+  termOut.scrollTop=termOut.scrollHeight;
+});
+document.getElementById('win-terminal').addEventListener('click',()=>termInput.focus());
+
+// ===== BROWSER URL =====
+function setBrowserUrl(url){
+  document.getElementById('browser-url').textContent='pakhi://'+url;
+}
+
+// ===== AI ASSISTANT =====
+const aiMsgs=[
+  "Did you know Pakhi has built 150+ projects? She's unstoppable! 🚀",
+  "RobotCore systems are running at peak performance today!",
+  "Pakhi's GPT-integrated robot is the future of human-machine interaction.",
+  "Fun fact: Pakhi started her tech journey through WhiteHat Jr and never looked back!",
+  "codewithpakhi.com is live! Check it out in the browser app.",
+  "IoT sensors online. Pakhi's building smart systems that actually matter.",
+  "Chess + Code = Pakhi's winning formula. Strategic in everything she does.",
+];
+let aiIdx=0;
+function showAIMessage(){
+  showNotif('AI Assistant 🤖',aiMsgs[aiIdx%aiMsgs.length]);
+  aiIdx++;
+}
+
+// ===== PARTICLE EXPLOSION =====
+function triggerParticleExplosion(x,y){
+  const colors=['#a855f7','#00d4ff','#00ff88','#ff007f','#7c3aed','#ffffff'];
+  for(let i=0;i<60;i++){
+    const el=document.createElement('div');
+    el.className='particle';
+    const size=Math.random()*8+3;
+    const angle=Math.random()*Math.PI*2;
+    const dist=Math.random()*200+50;
+    el.style.cssText=`left:${x}px;top:${y}px;width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random()*colors.length)]};--tx:translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist}px);animation-duration:${Math.random()*0.8+0.5}s;`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),1300);
+  }
+}
+
+// ===== STAR CLICK EASTER EGG =====
+const secretMsgs=['🌟 "She\'s going to change the world. Watch."','💜 "150 projects and counting — where does she even find the time?"','🚀 "The future CEO of tech is already building."','🤖 "When her robot becomes sentient, it\'ll thank Pakhi first."','⚡ "Pakhi doesn\'t wait for the future. She codes it."'];
+let starMsgIdx=0;
+canvas.addEventListener('click',e=>{
+  showNotif('Hidden Star Message',secretMsgs[starMsgIdx%secretMsgs.length]);
+  triggerParticleExplosion(e.clientX,e.clientY);
+  starMsgIdx++;
+});
+
+// ===== KONAMI CODE =====
+const konamiSequence=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let konamiIdx=0;
+document.addEventListener('keydown',e=>{
+  if(e.key===konamiSequence[konamiIdx]){
+    konamiIdx++;
+    if(konamiIdx===konamiSequence.length){
+      document.getElementById('dev-mode-overlay').style.display='block';
+      document.getElementById('dev-mode-banner').style.display='block';
+      triggerParticleExplosion(window.innerWidth/2,window.innerHeight/2);
+      showNotif('🔓 Developer Mode','Konami Code entered! You found the secret!');
+      konamiIdx=0;
+      setTimeout(()=>{
+        document.getElementById('dev-mode-overlay').style.display='none';
+        document.getElementById('dev-mode-banner').style.display='none';
+      },5000);
+    }
+  } else { konamiIdx=0; }
+});
+
+// ===== TYPE 'PAKHI' EASTER EGG =====
+let typed='';
+document.addEventListener('keypress',e=>{
+  if(document.activeElement===termInput)return;
+  typed+=e.key.toLowerCase();
+  if(typed.length>5)typed=typed.slice(-5);
+  if(typed==='pakhi'){
+    triggerParticleExplosion(window.innerWidth/2,window.innerHeight/2);
+    showNotif('⚡ Easter Egg!','You typed PAKHI! Particle storm unleashed!');
+    typed='';
+  }
+});
+
+// ===== PERIODIC AI NOTIFS =====
+setTimeout(()=>{
+  showNotif('RobotCore','All systems nominal. AI pulse: 99%');
+},8000);
+setTimeout(()=>{
+  showNotif('PakhiOS','💡 Tip: Try the Konami code for developer mode!');
+},15000);
+setTimeout(()=>{
+  showNotif('Fans.txt','New fan message received: "You\'re an inspiration!" 💜');
+},22000);
+</script>
+</body>
+</html>
